@@ -10,40 +10,50 @@ from bs4 import BeautifulSoup
 class DialFileContentExtractor:
 
     def __init__(self, endpoint: str, api_key: str):
-        #TODO:
-        # Set Dial client with endpoint as base_url and api_key
-        raise NotImplementedError()
+        self.dial_client = Dial(api_key=api_key, base_url=endpoint)
 
     def extract_text(self, file_url: str) -> str:
-        #TODO:
-        # 1. Download with Dial client file by `file_url` (files -> download)
-        # 2. Get downloaded file name and content
-        # 3. Get file extension, use for this `Path(filename).suffix.lower()`
-        # 4. Call `__extract_text` and return its result
-        raise NotImplementedError()
+        file = self.dial_client.files.download(file_url)
+        return self.__extract_text(
+            file_content=file.get_content().decode("utf-8"),
+            file_extension=Path(file.filename).suffix.lower(),
+            filename=file.filename
+        )
 
     def __extract_text(self, file_content: bytes, file_extension: str, filename: str) -> str:
         """Extract text content based on file type."""
-        #TODO:
-        # Wrap in `try-except` block:
-        # try:
-        #   1. if `file_extension` is '.txt' then return `file_content.decode('utf-8', errors='ignore')`
-        #   2. if `file_extension` is '.pdf' then:
-        #       - load it with `io.BytesIO(file_content)`
-        #       - with pdfplumber.open PDF files bites
-        #       - iterate through created pages adn create array with extracted page text
-        #       - return it joined with `\n`
-        #   3. if `file_extension` is '.csv' then:
-        #       - decode `file_content` with encoding 'utf-8' and errors='ignore'
-        #       - create csv buffer from `io.StringIO(decoded_text_content)`
-        #       - read csv with pandas (pd) as dataframe
-        #       - return dataframe to markdown (index=False)
-        #   4. if `file_extension` is in ['.html', '.htm'] then:
-        #       - decode `file_content` with encoding 'utf-8' and errors='ignore'
-        #       - create BeautifulSoup with decoded html content, features set as 'html.parser' as `soup`
-        #       - remove script and style elements: iterate through `soup(["script", "style"])` and `decompose` those scripts
-        #       - return `soup.get_text(separator='\n', strip=True)`
-        #   5. otherwise return it as decoded `file_content` with encoding 'utf-8' and errors='ignore'
-        # except:
-        #   print an error and return empty string
-        raise NotImplementedError()
+        try:
+            if file_extension == ".txt":
+                return file_content.decode(
+                    "utf-8",
+                    errors="ignore"
+                )
+
+            if file_extension == ".pdf":
+                b_content = io.BytesIO(file_content)
+                pdf_file = pdfplumber.open(b_content)
+                page_texts = []
+                for page in pdf_file.pages:
+                    page_texts.append(page.extract_text())
+                return "\n".join(page_texts)
+
+            if file_extension == ".csv":
+                txt_data = file_content.decode('utf-8', errors='ignore')
+                buffer = io.StringIO(txt_data)
+                dataframe = pd.read_csv(buffer)
+                return dataframe.to_markdown()
+
+            if file_extension in ['.html', '.htm']:
+                html_data = file_content.decode('utf-8', errors='ignore')
+                soup = BeautifulSoup(html_data, features="html.parser")
+                for elem in soup(["script", "style"]):
+                    elem.decompose()
+                return soup.get_text(separator="\n", strip=True)
+
+            return file_content.decode(
+                "utf-8",
+                errors="ignore"
+            )
+        except Exception as e:
+            print(e)
+            return ""
