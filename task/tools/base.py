@@ -24,7 +24,7 @@ class BaseTool(ABC):
             else:
                 message.content = StrictStr(result)
         except Exception as e:
-            msg.content = StrictStr(f"ERROR during tool call execution:\n {e}")
+            message.content = StrictStr(f"ERROR during tool call execution:\n {e}")
 
         return message
 
