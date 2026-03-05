@@ -9,7 +9,7 @@ from task.tools.models import ToolCallParams
 
 
 class ImageGenerationToolProperties(BaseModel):
-    prompt: Required[str] = Field(description="Extensive description of the image that should be generated.")
+    prompt: str = Field(description="Extensive description of the image that should be generated.")
     size: str = Field(description="The size of the image to be generated.", default="1024x1024"),
     quality: str = Field(description="The quality of the image to be generated.", default="hd"),
     style: str = Field(description="The style of the image to be generated.", default="vivid"),

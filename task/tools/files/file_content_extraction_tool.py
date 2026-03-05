@@ -12,7 +12,7 @@ from task.utils.dial_file_conent_extractor import DialFileContentExtractor
 
 
 class FileContentExtractionToolInput(BaseModel):
-    file_url: Required[str] = Field(default=None)
+    file_url: str = Field(default=None)
     page: int = Field(default=1, description="For large documents pagination is enabled. Each page consists of 10000 characters.")
 
 
