@@ -16,7 +16,7 @@ from task.tools.mcp.mcp_tool import MCPTool
 from task.tools.rag.document_cache import DocumentCache
 from task.tools.rag.rag_tool import RagTool
 
-DIAL_ENDPOINT = os.getenv('DIAL_ENDPOINT', "http://localhost:8080")
+DIAL_ENDPOINT = os.getenv('DIAL_ENDPOINT', "http://wrong:8080")
 DEPLOYMENT_NAME = os.getenv('DEPLOYMENT_NAME', 'gpt-4o')
 
 
@@ -27,13 +27,14 @@ class GeneralPurposeAgentApplication(ChatCompletion):
 
     def __init__(self):
         self.tools: list[BaseTool] = []
-        self._py_interpreter_mcp_url = os.getenv('PYINTERPRETER_MCP_URL', "http://localhost:8050/mcp")
-        self._ddg_mcp_url = os.getenv('DDG_MCP_URL', "http://localhost:8051/mcp")
+        self._py_interpreter_mcp_url = os.getenv('PYINTERPRETER_MCP_URL', "http://wrong:8050/mcp")
+        self._ddg_mcp_url = os.getenv('DDG_MCP_URL', "http://wrong:8051/mcp")
         print(f"PYINTERPRETER_MCP_URL {self._py_interpreter_mcp_url}")
         print(f"DDG_MCP_URL {self._ddg_mcp_url}")
 
     async def _get_mcp_tools(self, url: str) -> list[BaseTool]:
         tools: list[BaseTool] = []
+        print("URL: " + url)
         mcp_client = await MCPClient.create(url)
         for mcp_tool_model in await mcp_client.get_tools():
             tools.append(
@@ -48,14 +49,14 @@ class GeneralPurposeAgentApplication(ChatCompletion):
         tools: list[BaseTool] = [
             ImageGenerationTool(endpoint=DIAL_ENDPOINT),
             FileContentExtractionTool(endpoint=DIAL_ENDPOINT),
-            RagTool(endpoint=DIAL_ENDPOINT, deployment_name=DEPLOYMENT_NAME, document_cache=DocumentCache.create()),
-            await PythonCodeInterpreterTool.create(
-                mcp_url=self._py_interpreter_mcp_url,
-                tool_name="execute_code",
-                dial_endpoint=DIAL_ENDPOINT
-            )
+            # RagTool(endpoint=DIAL_ENDPOINT, deployment_name=DEPLOYMENT_NAME, document_cache=DocumentCache.create()),
+            # await PythonCodeInterpreterTool.create(
+            #     mcp_url=self._py_interpreter_mcp_url,
+            #     tool_name="execute_code",
+            #     dial_endpoint=DIAL_ENDPOINT
+            # )
         ]
-        tools.extend(await self._get_mcp_tools(self._ddg_mcp_url))
+        # tools.extend(await self._get_mcp_tools(self._ddg_mcp_url))
         return tools
 
     async def chat_completion(self, request: Request, response: Response) -> None:
@@ -64,9 +65,9 @@ class GeneralPurposeAgentApplication(ChatCompletion):
 
         with response.create_single_choice() as choice:
             gen_agent = GeneralPurposeAgent(
-              endpoint=DIAL_ENDPOINT,
-              system_prompt=SYSTEM_PROMPT,
-              tools=self.tools,
+                endpoint=DIAL_ENDPOINT,
+                system_prompt=SYSTEM_PROMPT,
+                tools=self.tools,
             )
             await gen_agent.handle_request(
                 choice=choice,
@@ -75,6 +76,7 @@ class GeneralPurposeAgentApplication(ChatCompletion):
                 response=response,
             )
 
+
 app = DIALApp()
 gpa_agent = GeneralPurposeAgentApplication()
 
@@ -82,3 +84,4 @@ app.add_chat_completion(deployment_name="general-purpose-agent", impl=gpa_agent)
 
 if __name__ == "__main__":
     uvicorn.run(app, port=5030, host="0.0.0.0")
+

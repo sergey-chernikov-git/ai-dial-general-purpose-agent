@@ -4,8 +4,8 @@
     "general-purpose-agent": {
       "displayName": "General Purpose Agent",
       "description": "General Purpose Agent. Equipped with: WEB search (DuckDuckGo via MCP), RAG search (supports PDF, TXT, CSV files), Python Code Interpreter (via MCP), Image Generation (model).",
-      "endpoint": "http://localhost:5030/openai/deployments/general-purpose-agent/chat/completions",
-      "inputAttachmentTypes": ["image/png", "image/jpeg"],
+      "endpoint": "http://general-purpose-agent:5030/openai/deployments/general-purpose-agent/chat/completions",
+      "inputAttachmentTypes": ["image/png", "image/jpeg", "application/x-pdf"],
       "forwardAuthToken": true
     }
   },
@@ -13,11 +13,36 @@
     "gpt-4o": {
       "displayName": "GPT 4o",
       "endpoint": "http://adapter-dial:5000/openai/deployments/gpt-4o/chat/completions",
-      "iconUrl": "http://localhost:3001/gpt4.svg",
+      "iconUrl": "http://themes:3001/gpt4.svg",
       "type": "chat",
       "upstreams": [
         {
           "endpoint": "https://ai-proxy.lab.epam.com/openai/deployments/gpt-4o/chat/completions",
+          "key": "dial-bevmy8nn9t169udaejgvd94kuwy"
+        }
+      ]
+    },
+    "dall-e-3": {
+      "displayName": "DALL-E-3",
+      "endpoint": "http://adapter-dial:5000/openai/deployments/dall-e-3/chat/completions",
+      "iconUrl": "http://themes:3001/gpt3.svg",
+      "type": "chat",
+      "upstreams": [
+        {
+          "endpoint": "https://ai-proxy.lab.epam.com/openai/deployments/dall-e-3/chat/completions",
+          "key": "dial-bevmy8nn9t169udaejgvd94kuwy"
+        }
+      ]
+    },
+    "claude-haiku-4-5": {
+      "displayName": "Claude Sonnet 4.5",
+      "endpoint": "http://adapter-dial:5000/openai/deployments/claude-haiku-4-5/chat/completions",
+      "iconUrl": "https://chat.lab.epam.com/themes/anthropic.svg",
+      "type": "chat",
+      "upstreams": [
+        {
+          "endpoint": "https://ai-proxy.lab.epam.com/openai/deployments/anthropic.claude-haiku-4-5-20251001-v1:0/chat/completions",
+          "key": "dial-bevmy8nn9t169udaejgvd94kuwy"
         }
       ]
     }

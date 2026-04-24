@@ -3,7 +3,6 @@ services:
     image: epam/ai-dial-chat-themes:development
     ports:
       - "3001:8080"
-
   chat:
     ports:
       - "3000:3000"
@@ -52,8 +51,9 @@ services:
     volumes:
       - ./settings:/opt/settings
       - ${DIAL_DIR:-.}/core:/opt/config
-      - ${DIAL_DIR:-.}/core-logs/:/app/log
-      - ${DIAL_DIR:-.}/core-data/:/app/data
+#      removed due to podman issue, only for development purposes, in production use external volumes
+#      - ${DIAL_DIR:-.}/core-logs/:/app/log
+#      - ${DIAL_DIR:-.}/core-data/:/app/data
 
   adapter-dial:
     image: epam/ai-dial-adapter-dial:development
@@ -61,4 +61,37 @@ services:
       DIAL_URL: "http://core:8080"
       LOG_LEVEL: "INFO"
 
+  ddg-search:
+    image: khshanovskyi/ddg-mcp-server:latest
+    ports:
+      - "8051:8000"
+    environment:
+      LOG_LEVEL: "INFO"
+      MCP_TRANSPORT: "streamable-http"
+    restart: unless-stopped
+    mem_limit: 512M
+    cpus: 0.5
 
+  python-interpreter:
+    image: khshanovskyi/python-code-interpreter-mcp-server:latest
+    ports:
+      - "8050:8000"
+    environment:
+      LOG_LEVEL: "INFO"
+    restart: unless-stopped
+    mem_limit: 2G
+    cpus: 2.0
+
+  #fix for the issue with podman connect to the container from the host machine, only for development purposes
+  general-purpose-agent:
+    build:
+      context: .
+    command: python -m task.app
+    environment:
+      PYINTERPRETER_MCP_URL: http://python-interpreter:8050/mcp
+      DDG_MCP_URL: http://ddg-search:8051/mcp
+      DIAL_ENDPOINT: http://core:8080
+    ports:
+      - "5030:5030"
+    volumes:
+      - ./:/app

@@ -31,7 +31,8 @@ class DeploymentTool(BaseTool, ABC):
             api_key=tool_call_params.api_key,
             api_version=API_VERSION
         )
-        arguments = json.loads(tool_call_params.tool_call.function.parameters)
+        arguments = json.loads(tool_call_params.tool_call.function.arguments)
+
         prompt = arguments.get('prompt')
         del arguments['prompt']
 
@@ -41,6 +42,8 @@ class DeploymentTool(BaseTool, ABC):
                 content=prompt
             )
         ]
+        import pdb; pdb.set_trace()
+        print("Base: messages: " + str(messages))
         chunks = await client.chat.completions.create(
             messages,
             stream=True,
@@ -52,6 +55,7 @@ class DeploymentTool(BaseTool, ABC):
             },
             **self.tool_parameters,
         )
+        print("Base: chunks: " + str(chunks))
         content = ""
         custom_content: CustomContent = CustomContent(attachments=[])
         async for chunk in chunks:
@@ -74,7 +78,6 @@ class DeploymentTool(BaseTool, ABC):
                                 reference_url=attachment.reference_url,
                                 reference_type=attachment.reference_type,
                             )
-
         return Message(
             role=Role.TOOL,
             content=StrictStr(content),

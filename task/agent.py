@@ -27,49 +27,61 @@ class GeneralPurposeAgent:
         self._tools = tools
         self._tools_dict: dict[str, BaseTool] = {tool.name: tool for tool in tools}
         self._state = {
-            "TOOL_CALL_HISTORY_KEY": []
+            TOOL_CALL_HISTORY_KEY: []
         }
 
     async def handle_request(self, deployment_name: str, choice: Choice, request: Request,
                              response: Response) -> Message:
-        dial_async = AsyncDial(base_url=self._endpoint, api_key=request.api_key, api_version=request.api_version)
-        chunks = dial_async.chat.completions.create(
+        api_key = request.api_key
+
+        client: AsyncDial = AsyncDial(
+            base_url=self._endpoint,
+            api_key=api_key,
+            api_version=request.api_version,
+        )
+
+        chunks = await client.chat.completions.create(
             messages=self._prepare_messages(request.messages),
             tools=[tool.schema for tool in self._tools],
+            stream=True,
             deployment_name=deployment_name,
-            stream=True
         )
+
         tool_call_index_map = {}
-        content = ""
+        content = ''
         custom_content: CustomContent = CustomContent(attachments=[])
         async for chunk in chunks:
-            if chunk.get('choices'):
-                delta = chunk.get('choices')[0].delta
+            if chunk.choices and len(chunk.choices) > 0:
+                delta = chunk.choices[0].delta
                 if delta and delta.content:
                     choice.append_content(delta.content)
                     content += delta.content
-                if delta and delta.tool_calls:
-                    for call in delta.tool_calls:
-                        if call.id:
-                            tool_call_index_map[call.index] = call
+
+                if delta.tool_calls:
+                    for tool_call_delta in delta.tool_calls:
+                        if tool_call_delta.id:
+                            tool_call_index_map[tool_call_delta.index] = tool_call_delta
                         else:
-                            tool_call = tool_call_index_map[call.index]
-                            if call.function:
-                                argument_chunk = call.function.arguments or ''
+                            tool_call = tool_call_index_map[tool_call_delta.index]
+                            if tool_call_delta.function:
+                                argument_chunk = tool_call_delta.function.arguments or ''
                                 tool_call.function.arguments += argument_chunk
+        print("############################# tool_calls ######################################")
+
         assistant_message = Message(
             role=Role.ASSISTANT,
             content=StrictStr(content),
             custom_content=custom_content,
-            tool_calls=[ToolCall.model_validate(tool_call) for tool_call in tool_call_index_map.values()]
+            tool_calls=[ToolCall.validate(tool_call) for tool_call in tool_call_index_map.values()]
         )
-
+        print(f"############################# assistant_message.tool_calls ###################################### assistant_message: \n{assistant_message}")
         if assistant_message.tool_calls:
+
             tasks = [
                 self._process_tool_call(
                     tool_call=tool_call,
                     choice=choice,
-                    api_key=request.api_key,
+                    api_key=api_key,
                     conversation_id=request.headers['x-conversation-id']
                 )
                 for tool_call in assistant_message.tool_calls
@@ -92,9 +104,9 @@ class GeneralPurposeAgent:
 
     def _prepare_messages(self, messages: list[Message]) -> list[dict[str, Any]]:
         unpacked_msgs = unpack_messages(messages, self._state[TOOL_CALL_HISTORY_KEY])
-        unpacked_msgs.insert(0,  {
-                "role": Role.SYSTEM.value,
-                "content": self._system_prompt,
+        unpacked_msgs.insert(0, {
+            "role": Role.SYSTEM.value,
+            "content": self._system_prompt,
         })
         print("================ History ====================")
         for msg in unpacked_msgs:
@@ -102,8 +114,7 @@ class GeneralPurposeAgent:
 
         return unpacked_msgs
 
-    async def _process_tool_call(self, tool_call: ToolCall, choice: Choice, api_key: str, conversation_id: str) -> dict[
-        str, Any]:
+    async def _process_tool_call(self, tool_call: ToolCall, choice: Choice, api_key: str, conversation_id: str) -> dict[str, Any]:
         name = tool_call.function.name
         stage = StageProcessor.open_stage(
             choice=choice,
