@@ -70,7 +70,7 @@ class GeneralPurposeAgent:
 
         assistant_message = Message(
             role=Role.ASSISTANT,
-            content=StrictStr(content),
+            content=content,
             custom_content=custom_content,
             tool_calls=[ToolCall.validate(tool_call) for tool_call in tool_call_index_map.values()]
         )
