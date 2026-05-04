@@ -17,6 +17,8 @@ from task.tools.rag.rag_tool import RagTool
 
 DIAL_ENDPOINT = os.getenv('DIAL_ENDPOINT', "http://wrong:8080")
 DEPLOYMENT_NAME = os.getenv('DEPLOYMENT_NAME', 'gpt-4o')
+
+
 # DEPLOYMENT_NAME = os.getenv('DEPLOYMENT_NAME', 'claude-haiku-4-5')
 
 
@@ -88,6 +90,17 @@ class GeneralPurposeAgentApplication(ChatCompletion):
 app: DIALApp = DIALApp()
 agent_app = GeneralPurposeAgentApplication()
 app.add_chat_completion(deployment_name="general-purpose-agent", impl=agent_app)
+
+#
+# @app.get("/images/{image_name}")
+# def serve_image(image_name: str):
+#     from fastapi.responses import FileResponse
+#     image_path = f"../images/{image_name}"
+#     if os.path.exists(image_path):
+#         return FileResponse(image_path, media_type="image/png")
+#     else:
+#         return {"error": "Image not found"}
+
 
 if __name__ == "__main__":
     uvicorn.run(app, port=5030, host="0.0.0.0")
