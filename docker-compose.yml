@@ -1,7 +1,7 @@
 services:
   themes:
     image: epam/ai-dial-chat-themes:development
-    
+
   chat:
     ports:
       - "3000:3000"
