@@ -1,11 +1,14 @@
 from typing import Any, Optional
 
-from aidial_sdk.chat_completion import Message
+from aidial_sdk.chat_completion import Message, Role
 from pydantic import StrictStr, BaseModel
 from pydantic.v1 import Required, Field
+from sympy import re
 
 from task.tools.deployment.base import DeploymentTool
 from task.tools.models import ToolCallParams
+from requests import post
+import json, re
 
 
 class ImageGenerationToolProperties(BaseModel):
@@ -30,23 +33,21 @@ class ImageGenerationToolProperties(BaseModel):
 class ImageGenerationTool(DeploymentTool):
 
     async def _execute(self, tool_call_params: ToolCallParams) -> str | Message:
-        print(f"############################# _execute ###################################### tool_call_params: {tool_call_params}")
-        result = await super()._execute(tool_call_params)
-        print(f"############################# result ###################################### {result}")
-        if result.custom_content and result.custom_content.attachments:
-            [
-                tool_call_params.choice.append_content(f"\n\r![image]({attachment.url})\n\r")
-                for attachment in result.custom_content.attachments
-                if attachment.type in ["image/png", "image/jpeg"]
-            ]
-            if not result.content:
-                result.content = StrictStr(
-                    'The image has been successfully generated according to request and shown to user!')
-        return result
+        msg = await super()._execute(tool_call_params)
+
+        if msg.custom_content and msg.custom_content.attachments:
+            for attachment in msg.custom_content.attachments:
+                if attachment.type in ("image/png", "image/jpeg"):
+                    tool_call_params.choice.append_content(f"\n\r![image]({attachment.url})\n\r")
+
+            if not msg.content:
+                msg.content = StrictStr('The image has been successfully generated according to request and shown to user!')
+
+        return msg
 
     @property
     def deployment_name(self) -> str:
-        return "dall-e-3"
+        return "gpt-image-1-mini-2025-10-06"
 
     @property
     def name(self) -> str:
