@@ -8,7 +8,6 @@ from pydantic import StrictStr
 
 from task.tools.base import BaseTool
 from task.tools.models import ToolCallParams
-from task.utils.constants import API_VERSION
 
 
 class DeploymentTool(BaseTool, ABC):
@@ -29,23 +28,14 @@ class DeploymentTool(BaseTool, ABC):
         client: AsyncDial = AsyncDial(
             base_url=self.endpoint,
             api_key=tool_call_params.api_key,
-            api_version=API_VERSION
+            api_version='2025-01-01-preview'
         )
+
         arguments = json.loads(tool_call_params.tool_call.function.arguments)
-
-        prompt = arguments.get('prompt')
-        del arguments['prompt']
-
-        messages = [
-            Message(
-                role=Role.USER,
-                content=prompt
-            )
-        ]
-        import pdb; pdb.set_trace()
-        print("Base: messages: " + str(messages))
+        prompt = arguments.get("prompt")
+        del arguments["prompt"]
         chunks = await client.chat.completions.create(
-            messages,
+            messages=[{"role": "user", "content": prompt}],
             stream=True,
             deployment_name=self.deployment_name,
             extra_body={
@@ -55,8 +45,8 @@ class DeploymentTool(BaseTool, ABC):
             },
             **self.tool_parameters,
         )
-        print("Base: chunks: " + str(chunks))
-        content = ""
+
+        content = ''
         custom_content: CustomContent = CustomContent(attachments=[])
         async for chunk in chunks:
             if chunk.choices and len(chunk.choices) > 0:
@@ -78,6 +68,7 @@ class DeploymentTool(BaseTool, ABC):
                                 reference_url=attachment.reference_url,
                                 reference_type=attachment.reference_type,
                             )
+
         return Message(
             role=Role.TOOL,
             content=StrictStr(content),

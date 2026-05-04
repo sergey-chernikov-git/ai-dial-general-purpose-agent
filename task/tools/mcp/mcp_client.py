@@ -2,7 +2,7 @@ from typing import Optional, Any
 
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
-from mcp.types import CallToolResult, TextResourceContents, BlobResourceContents
+from mcp.types import CallToolResult, TextContent, ReadResourceResult, TextResourceContents, BlobResourceContents
 from pydantic import AnyUrl
 
 from task.tools.mcp.mcp_tool_model import MCPToolModel
@@ -46,38 +46,75 @@ class MCPClient:
 
     async def get_tools(self) -> list[MCPToolModel]:
         """Get available tools from MCP server"""
-        tools = (await self._session.list_tools()).tools
+        if not self._session:
+            raise RuntimeError("MCP client not connected.")
+
+        tools = await self._session.list_tools()
         return [
-            MCPToolModel(name=tool.name, description=tool.description, parameters=tool.outputSchema)
-            for tool in tools
+            MCPToolModel(
+                name=tool.name,
+                description=tool.description,
+                parameters=tool.inputSchema,
+            )
+            for tool in tools.tools
         ]
 
     async def call_tool(self, tool_name: str, tool_args: dict[str, Any]) -> Any:
         """Call a tool on the MCP server"""
-        result: CallToolResult = await self._session.call_tool(name=tool_name, arguments=tool_args)
-        return result.content[0]
+        if not self._session:
+            raise RuntimeError("MCP client not connected.")
+
+        tool_result: CallToolResult = await self._session.call_tool(tool_name, tool_args)
+
+        if not tool_result.content:
+            return None
+
+        content = tool_result.content[0]
+
+        if isinstance(content, TextContent):
+            return content.text
+
+        return content
 
     async def get_resource(self, uri: AnyUrl) -> str | bytes:
         """Get specific resource content"""
+        if not self._session:
+            raise RuntimeError("MCP client not connected.")
 
-        resource = await self._session.read_resource(uri)
-        content = resource.contents[0]
+        resource_result: ReadResourceResult = await self._session.read_resource(uri)
+
+        if not resource_result.contents:
+            raise ValueError(f"No content in resource: {uri}")
+
+        content = resource_result.contents[0]
 
         if isinstance(content, TextResourceContents):
             return content.text
-
-        if isinstance(content, BlobResourceContents):
+        elif isinstance(content, BlobResourceContents):
             return content.blob
-
-        return ""
+        else:
+            raise ValueError(f"Unexpected content type: {type(content)}")
 
     async def close(self):
         """Close connection to MCP server"""
-        self._session_context.close()
-        self._streams_context.close()
-        self._session_context = None
-        self._streams_context = None
-        self._session = None
+        # Exit contexts in reverse order of entry
+        try:
+            if self._session_context:
+                await self._session_context.__aexit__(None, None, None)
+        except Exception as e:
+            print(f"Warning: Error closing session context: {e}")
+
+        try:
+            if self._streams_context:
+                await self._streams_context.__aexit__(None, None, None)
+        except Exception as e:
+            print(f"Warning: Error closing streams context: {e}")
+
+        finally:
+            # Clean up references
+            self._session = None
+            self._session_context = None
+            self._streams_context = None
 
     async def __aenter__(self):
         """Async context manager entry"""

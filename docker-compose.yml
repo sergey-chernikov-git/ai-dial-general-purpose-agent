@@ -1,8 +1,7 @@
 services:
   themes:
     image: epam/ai-dial-chat-themes:development
-    ports:
-      - "3001:8080"
+    
   chat:
     ports:
       - "3000:3000"
@@ -22,8 +21,6 @@ services:
   redis:
     image: redis:7.2.4-alpine3.19
     restart: always
-    ports:
-      - "6379:6379"
     command: >
       redis-server
       --maxmemory 2000mb
@@ -35,8 +32,6 @@ services:
 
   core:
     user: ${UID:-root}
-    ports:
-      - "8080:8080"
     image: epam/ai-dial-core:development
     environment:
       'AIDIAL_SETTINGS': '/opt/settings/settings.json'
@@ -63,8 +58,6 @@ services:
 
   ddg-search:
     image: khshanovskyi/ddg-mcp-server:latest
-    ports:
-      - "8051:8000"
     environment:
       LOG_LEVEL: "INFO"
       MCP_TRANSPORT: "streamable-http"
@@ -74,8 +67,6 @@ services:
 
   python-interpreter:
     image: khshanovskyi/python-code-interpreter-mcp-server:latest
-    ports:
-      - "8050:8000"
     environment:
       LOG_LEVEL: "INFO"
     restart: unless-stopped
@@ -87,11 +78,12 @@ services:
     build:
       context: .
     command: python -m task.app
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
     environment:
-      PYINTERPRETER_MCP_URL: http://python-interpreter:8050/mcp
-      DDG_MCP_URL: http://ddg-search:8051/mcp
+      PYINTERPRETER_MCP_URL: http://python-interpreter:8000/mcp
+      DDG_MCP_URL: http://ddg-search:8000/mcp
       DIAL_ENDPOINT: http://core:8080
-    ports:
-      - "5030:5030"
     volumes:
       - ./:/app

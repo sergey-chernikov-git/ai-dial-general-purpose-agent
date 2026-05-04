@@ -13,22 +13,25 @@ class MCPTool(BaseTool):
 
     def __init__(self, client: MCPClient, mcp_tool_model: MCPToolModel):
         self._client = client
-        self._model = mcp_tool_model
+        self._mcp_tool_model = mcp_tool_model
 
     async def _execute(self, tool_call_params: ToolCallParams) -> str | Message:
         arguments = json.loads(tool_call_params.tool_call.function.arguments)
+
         content = await self._client.call_tool(self.name, arguments)
+
         tool_call_params.stage.append_content(content)
+
         return content
 
     @property
     def name(self) -> str:
-        return self._model.name
+        return self._mcp_tool_model.name
 
     @property
     def description(self) -> str:
-        return self._model.description
+        return self._mcp_tool_model.description
 
     @property
     def parameters(self) -> dict[str, Any]:
-        return self._model.parameters
+        return self._mcp_tool_model.parameters

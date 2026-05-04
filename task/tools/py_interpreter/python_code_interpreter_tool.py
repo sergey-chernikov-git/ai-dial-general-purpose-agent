@@ -78,6 +78,7 @@ class PythonCodeInterpreterTool(BaseTool):
         return self._code_execute_tool.parameters
 
     async def _execute(self, tool_call_params: ToolCallParams) -> str | Message:
+        print("PythonCodeInterpreterTool: " + str(tool_call_params))
         args = json.loads(tool_call_params.tool_call.function.arguments)
         code = args.get('code')
         stage = tool_call_params.stage
