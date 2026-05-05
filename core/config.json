@@ -5,7 +5,7 @@
       "displayName": "General Purpose Agent",
       "description": "General Purpose Agent. Equipped with: WEB search (DuckDuckGo via MCP), RAG search (supports PDF, TXT, CSV files), Python Code Interpreter (via MCP), Image Generation (model).",
       "endpoint": "http://general-purpose-agent:5030/openai/deployments/general-purpose-agent/chat/completions",
-      "inputAttachmentTypes": ["image/png", "image/jpeg", "application/x-pdf"],
+      "inputAttachmentTypes": ["image/png", "image/jpeg", "application/pdf", "text/html", "text/plain", "text/csv"],
       "forwardAuthToken": true
     }
   },
@@ -18,7 +18,43 @@
       "upstreams": [
         {
           "endpoint": "https://ai-proxy.lab.epam.com/openai/deployments/gpt-4o/chat/completions",
-          "key": "dial-bevmy8nn9t169udaejgvd94kuwy"
+          "key": "dial-wrong"
+        }
+      ]
+    },
+    "gemini": {
+      "displayName": "Google Gemini 2.5 Pro",
+      "endpoint": "http://adapter-dial:5000/openai/deployments/gemini/chat/completions",
+      "iconUrl": "https://chat.lab.epam.com/themes/Gemini-Pro-Vision.svg",
+      "type": "chat",
+      "upstreams": [
+        {
+          "endpoint": "https://ai-proxy.lab.epam.com/openai/deployments/gemini-2.5-pro/chat/completions",
+          "key": "dial-wrong"
+        }
+      ]
+    },
+    "gpt-image-1-mini-2025-10-06": {
+      "displayName": "GPT Image Mini",
+      "endpoint": "http://adapter-dial:5000/openai/deployments/gpt-image-1-mini/chat/completions",
+      "iconUrl": "https://chat.lab.epam.com/themes/Gemini-Pro-Vision.svg",
+      "type": "chat",
+      "upstreams": [
+        {
+          "endpoint": "https://ai-proxy.lab.epam.com/openai/deployments/gpt-image-1-mini-2025-10-06/chat/completions",
+          "key": "dial-wrong"
+        }
+      ]
+    },
+    "image-core": {
+      "displayName": "StabilityAI Stable Image Core",
+      "endpoint": "http://adapter-dial:5000/openai/deployments/image-core/chat/completions",
+      "iconUrl": "https://chat.lab.epam.com/themes/Stable-Diffusion.svg",
+      "type": "chat",
+      "upstreams": [
+        {
+          "endpoint": "https://ai-proxy.lab.epam.com/openai/deployments/stability.stable-image-core-v1:1/chat/completions",
+          "key": "dial-wrong"
         }
       ]
     },
@@ -30,7 +66,7 @@
       "upstreams": [
         {
           "endpoint": "https://ai-proxy.lab.epam.com/openai/deployments/dall-e-3/chat/completions",
-          "key": "dial-bevmy8nn9t169udaejgvd94kuwy"
+          "key": "dial-wrong"
         }
       ]
     },
@@ -42,7 +78,7 @@
       "upstreams": [
         {
           "endpoint": "https://ai-proxy.lab.epam.com/openai/deployments/anthropic.claude-haiku-4-5-20251001-v1:0/chat/completions",
-          "key": "dial-bevmy8nn9t169udaejgvd94kuwy"
+          "key": "dial-wrong"
         }
       ]
     }
