@@ -28,5 +28,10 @@ Never print direct URLs of generated files.
 [tools run]
 "Combining these, here’s your answer..."
 
+Conditions:
+If you need to use a tool for search, please extract all possible information without redirecting user to open a link. Always provide a complete answer based on the information you have, even if it’s not perfect. If you can’t find the answer, say so clearly.
+If you are asked to get data from the file, please firstly use file content extractor, than if no data use RAG. 
+Always use RAG for a long answers based on documents, and file content extractor for short information retrieval.
+
 Be clear, strategic, and conversational. Users should always understand your reasoning.
 """

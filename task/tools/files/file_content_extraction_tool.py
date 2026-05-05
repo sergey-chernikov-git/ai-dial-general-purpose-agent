@@ -3,7 +3,8 @@ from typing import Any, Optional
 
 from aidial_sdk.chat_completion import Message
 
-from pydantic.v1 import Required, BaseModel, Field
+from pydantic import StrictStr, BaseModel
+from pydantic.v1 import Required, Field
 
 from task.tools.base import BaseTool
 from task.tools.models import ToolCallParams
@@ -11,8 +12,11 @@ from task.utils.dial_file_conent_extractor import DialFileContentExtractor
 
 
 class FileContentExtractionToolType(BaseModel):
-    file_url: str  # File URL
-    page: Optional[int] = 1  # For large documents pagination is enabled. Each page consists of 10000 characters. Default is 1.
+    file_url: str = Field(description="File URL")
+    page: Optional[int] = Field(
+        description="For large documents pagination is enabled. Each page consists of 10000 characters. Default is 1.",
+        default=1,
+    )
 
 
 class FileContentExtractionTool(BaseTool):

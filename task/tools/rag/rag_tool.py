@@ -6,7 +6,8 @@ import numpy as np
 from aidial_client import AsyncDial
 from aidial_sdk.chat_completion import Message, Role
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from pydantic.v1 import BaseModel, Field
+from pydantic import StrictStr, BaseModel
+from pydantic.v1 import Required, Field
 from sentence_transformers import SentenceTransformer
 
 from task.tools.base import BaseTool
@@ -27,8 +28,8 @@ Instructions:
 
 
 class RagToolModel(BaseModel):
-    request: str  # The search query or question to search for in the document
-    file_url: str  # File URL
+    request: str = Field(description="The search query or question to search for in the document")
+    file_url: str = Field(description="File URL")
 
 
 class RagTool(BaseTool):
