@@ -85,5 +85,5 @@ services:
       PYINTERPRETER_MCP_URL: http://python-interpreter:8000/mcp
       DDG_MCP_URL: http://ddg-search:8000/mcp
       DIAL_ENDPOINT: http://core:8080
-    volumes:
-      - ./:/app
+#    volumes:
+#      - ./:/app
